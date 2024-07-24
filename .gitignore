@@ -120,3 +120,5 @@ nbproject
 .dir-locals.el
 Build.props
 Directory.Build.props
+install/
+CMakePresets.json
