@@ -6,13 +6,17 @@ My Test Project of Bermudan Swaption pricing
 #if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #  include <ql/auto_link.hpp>
 #endif
+// For swap definition
 #include <ql/utilities/dataformatters.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/vanillaswap.hpp>
 #include <ql/instruments/swaption.hpp>
+// For model
+
 
 #include <iostream>
 #include <iomanip>
@@ -53,10 +57,10 @@ int main(int, char* []) {
             ext::make_shared<FlatForward>(
                 settlementDate, Handle<Quote>(flatRate), Actual365Fixed()));
 
-        auto rhTermStructure2 = ext::make_shared<YieldTermStructure>(
-            ext::make_shared<FlatForward>(
-                settlementDate, ext::make_shared<Quote>(flatRate),
-                Actual365Fixed()));
+        // auto rhTermStructure2 = ext::make_shared<YieldTermStructure>(
+        //     ext::make_shared<FlatForward>(
+        //         settlementDate, ext::make_shared<Quote>(flatRate),
+        //         Actual365Fixed()));
         
         // Define the ATM/OTM/ITM swaps
         Frequency fixedLegFrequency = Annual;
@@ -64,7 +68,12 @@ int main(int, char* []) {
         BusinessDayConvention fixedLegConvention = Unadjusted;
         BusinessDayConvention floatingLegConvention = ModifiedFollowing;
         DayCounter fixedLegDayCounter = Thirty360(Thirty360::European);
+        Swap::Type type = Swap::Payer;
+        Rate dummyFixedRate = 0.03;
+        auto indexSixmonths = ext::make_shared<Euribor6M>(rhTermStructure);
 
+        Date startDate = calendar.advance(settlementDate, 1, Years, floatingLegConvention);
+        Date maturity = calendar.advance(startDate, 5, Years, floatingLegConvention);
 
 
         return 0;
