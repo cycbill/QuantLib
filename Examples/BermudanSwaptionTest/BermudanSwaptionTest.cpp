@@ -16,6 +16,7 @@ My Test Project of Bermudan Swaption pricing
 #include <ql/instruments/vanillaswap.hpp>
 #include <ql/instruments/swaption.hpp>
 // For model
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 
 #include <iostream>
@@ -74,7 +75,24 @@ int main(int, char* []) {
 
         Date startDate = calendar.advance(settlementDate, 1, Years, floatingLegConvention);
         Date maturity = calendar.advance(startDate, 5, Years, floatingLegConvention);
+        Schedule fixedSchedule(startDate, maturity, Period(fixedLegFrequency), 
+                               calendar, fixedLegConvention, fixedLegConvention,
+                               DateGeneration::Forward, false);
+        Schedule floatSchedule(startDate, maturity, Period(floatingLegFrequency), 
+                               calendar, floatingLegConvention, floatingLegConvention,
+                               DateGeneration::Forward, false);        
 
+        auto swap = ext::make_shared<VanillaSwap>(
+            type, 1000.0,
+            fixedSchedule, dummyFixedRate, fixedLegDayCounter,
+            floatSchedule, indexSixmonths, 0.0,
+            indexSixmonths->dayCounter()
+        );
+        swap->setPricingEngine(ext::make_shared<DiscountingSwapEngine>(rhTermStructure));
+
+        std::cout << "Swap with fixed rate = " << dummyFixedRate << std::endl;
+        std::cout << "Price = " << swap->NPV() << std::endl;
+        std::cout << "Fair rate = " << swap->fairRate() << std::endl;
 
         return 0;
     } catch (std::exception& e) {
