@@ -93,6 +93,7 @@ int main(int, char* []) {
         std::cout << "Swap with fixed rate = " << dummyFixedRate << std::endl;
         std::cout << "Price = " << swap->NPV() << std::endl;
         std::cout << "Fair rate = " << swap->fairRate() << std::endl;
+        std::cout << "Fixed leg BPS = " << swap->fixedLegBPS() << ", float leg BPS = " << swap->floatingLegBPS() << std::endl;
 
         return 0;
     } catch (std::exception& e) {
