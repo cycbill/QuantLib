@@ -375,7 +375,7 @@ set(QL_SOURCES
     math/integrals/integral.cpp
     math/integrals/kronrodintegral.cpp
     math/integrals/segmentintegral.cpp
-    math/interpolations/chebyshevinterpolation.cpp    
+    math/interpolations/chebyshevinterpolation.cpp
     math/matrix.cpp
     math/matrixutilities/basisincompleteordered.cpp
     math/matrixutilities/bicgstab.cpp
@@ -646,7 +646,6 @@ set(QL_SOURCES
     models/volatility/constantestimator.cpp
     models/volatility/garch.cpp
     money.cpp
-    optional.cpp
     patterns/observable.cpp
     position.cpp
     prices.cpp
@@ -1451,7 +1450,7 @@ set(QL_HEADERS
     math/interpolations/backwardflatlinearinterpolation.hpp
     math/interpolations/bicubicsplineinterpolation.hpp
     math/interpolations/bilinearinterpolation.hpp
-    math/interpolations/chebyshevinterpolation.hpp    
+    math/interpolations/chebyshevinterpolation.hpp
     math/interpolations/convexmonotoneinterpolation.hpp
     math/interpolations/cubicinterpolation.hpp
     math/interpolations/extrapolation.hpp
@@ -2364,6 +2363,10 @@ target_compile_definitions(ql_library PRIVATE
 
 target_compile_options(ql_library PRIVATE
     ${OpenMP_CXX_FLAGS})
+
+# CMAKE_CXX_STANDARD is always set in top-level CMakeLists
+target_compile_features(ql_library PUBLIC
+    cxx_std_${CMAKE_CXX_STANDARD})  
 
 if(MSVC AND CMAKE_UNITY_BUILD)
     # for Unity builds, we need to add /bigobj
