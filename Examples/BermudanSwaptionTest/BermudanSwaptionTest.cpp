@@ -23,6 +23,9 @@ My Test Project of Bermudan Swaption pricing
 // For calibration
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/models/calibrationhelper.hpp>
+// For bond
+#include <ql/instruments/bonds/zerocouponbond.hpp>
+#include <ql/pricingengines/bond/discountingbondengine.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -192,7 +195,7 @@ int main(int, char* []) {
                                 indexSixMonths->dayCounter(),
                                 indexSixMonths->dayCounter(),
                                 rhTermStructure,
-                                BlackCalibrationHelper::CalibrationErrorType::ImpliedVolError));
+                                BlackCalibrationHelper::CalibrationErrorType::RelativePriceError));
             swaptions.back()->addTimesTo(times);
         }
 
@@ -207,11 +210,18 @@ int main(int, char* []) {
         calibrateModel(modelHW, swaptions);
 
         std::cout << "problemValues: " << modelHW->problemValues()
-                  << "Use iterations: " << modelHW->functionEvaluation() << "\n";
+                  << ", use iterations: " << modelHW->functionEvaluation() << "\n";
         std::cout << "calibrated to:\n"
                   << "a = " << modelHW->params()[0] << ", "
                   << "sigma = " << modelHW->params()[1]
                   << std::endl << std::endl;
+
+        // Bond prices from HW
+        Real bondPrice = modelHW->discountBond(0.0, 5.0, 0.04875825);
+        std::cout << "\nBond price from HW model: " << bondPrice << std::endl;
+
+
+
 
         return 0;
     } catch (std::exception& e) {
