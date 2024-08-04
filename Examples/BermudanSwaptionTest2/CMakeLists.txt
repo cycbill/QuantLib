@@ -1,0 +1,5 @@
+add_executable(BermudanSwaptionTest2 BermudanSwaptionTest2.cpp)
+target_link_libraries(BermudanSwaptionTest2 ql_library ${QL_THREAD_LIBRARIES})
+if (QL_INSTALL_EXAMPLES)
+    install(TARGETS BermudanSwaptionTest2 RUNTIME DESTINATION ${QL_INSTALL_EXAMPLESDIR})
+endif()

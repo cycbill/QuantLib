@@ -1,6 +1,7 @@
 add_subdirectory(BasketLosses)
 add_subdirectory(BermudanSwaption)
 add_subdirectory(BermudanSwaptionTest)
+add_subdirectory(BermudanSwaptionTest2)
 add_subdirectory(Bonds)
 add_subdirectory(CallableBonds)
 add_subdirectory(CDS)

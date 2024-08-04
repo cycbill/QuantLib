@@ -1,7 +1,6 @@
 /*
 My Test Project of Bermudan Swaption pricing
-Test Case:
-Flat rate curve
+Test case: real rate curve term structure
 */
 
 #include <ql/qldefines.hpp>
