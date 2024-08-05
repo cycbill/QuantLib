@@ -11,11 +11,17 @@ Test case: real rate curve term structure
 #include <ql/utilities/dataformatters.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/indexes/ibor/eonia.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/vanillaswap.hpp>
 #include <ql/instruments/swaption.hpp>
+#include <ql/termstructures/yield/ratehelpers.hpp>
+#include <ql/termstructures/yield/oisratehelper.hpp>
+#include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
+#include <ql/math/interpolations/cubicinterpolation.hpp>
 // For model
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
@@ -91,19 +97,76 @@ int main(int, char* []) {
         Settings::instance().evaluationDate() = todaysDate;
 
         /****************************************************************/
+        /*************** Define rate curve term structure ***************/
+        /****************************************************************/
+        // RateHelpers are built from the quotes, together with
+        // other info depending on the instrument.  Quotes are passed in
+        // relinkable handles which could be relinked to some other
+        // data source later.
+
+        std::vector<ext::shared_ptr<RateHelper>> eoniaInstruments;
+
+        // deposits
+        // std::map<Period, ext::shared_ptr<Quote>> depoQuotes = {
+        //     // settlement days, quote
+        //     {3 * Months, ext::make_shared<SimpleQuote>(0.0517)},
+        //     {6 * Months, ext::make_shared<SimpleQuote>(0.0484)},
+        //     {1 * Years, ext::make_shared<SimpleQuote>(0.0436)},
+        //     {2 * Years, ext::make_shared<SimpleQuote>(0.0388)},
+        //     {5 * Years, ext::make_shared<SimpleQuote>(0.0362)},
+        //     {10 * Years, ext::make_shared<SimpleQuote>(0.0379)},
+        //     {30 * Years, ext::make_shared<SimpleQuote>(0.0411)}
+        // };
+
+        // DayCounter depositDayCounter = Actual365Fixed();
+
+        // for (const auto& q : depoQuotes) {
+        //     auto settlementDays = days(q.first);
+        //     auto quote = q.second;
+        //     auto helper = ext::make_shared<DepositRateHelper>(
+        //         Handle<Quote>(quote),
+        //         1 * Days, settlementDays,
+        //         calendar, Following,
+        //         false, depositDayCounter);
+        //     eoniaInstruments.push_back(helper);
+        // }
+
+        // short-term OIS
+        auto eonia = ext::make_shared<Eonia>();
+        std::map<Period, ext::shared_ptr<Quote>> shortOisQuotes = {
+            {3 * Months, ext::make_shared<SimpleQuote>(0.0517)},
+            {6 * Months, ext::make_shared<SimpleQuote>(0.0484)},
+            {1 * Years, ext::make_shared<SimpleQuote>(0.0436)},
+            {2 * Years, ext::make_shared<SimpleQuote>(0.0388)},
+            {5 * Years, ext::make_shared<SimpleQuote>(0.0362)},
+            {10 * Years, ext::make_shared<SimpleQuote>(0.0379)},
+            {30 * Years, ext::make_shared<SimpleQuote>(0.0411)}
+        };
+
+        for (const auto& q : shortOisQuotes) {
+            auto tenor = q.first;
+            auto quote = q.second;
+            auto helper = ext::make_shared<OISRateHelper>(
+                2, tenor, Handle<Quote>(quote), eonia);
+            eoniaInstruments.push_back(helper);
+        }
+
+        // curve
+        DayCounter termStructureDayCounter = Actual365Fixed();
+        auto eoniaTermStructure = ext::make_shared<PiecewiseYieldCurve<Discount, Cubic>>(
+                todaysDate, eoniaInstruments, termStructureDayCounter);
+
+        Handle<YieldTermStructure> rhTermStructure(eoniaTermStructure);
+
+        /****************************************************************/
         /* Calibration Approach: Co-terminal swap calibration at strike */
         /****************************************************************/
 
         // flat yield term structure impling 1x5 swaps at 5%
-        auto flatRate = ext::make_shared<SimpleQuote>(0.04875825);
-        Handle<YieldTermStructure> rhTermStructure(
-            ext::make_shared<FlatForward>(
-                settlementDate, Handle<Quote>(flatRate), Actual365Fixed()));
-
-        // auto rhTermStructure2 = ext::make_shared<YieldTermStructure>(
+        // auto flatRate = ext::make_shared<SimpleQuote>(0.04875825);
+        // Handle<YieldTermStructure> rhTermStructure(
         //     ext::make_shared<FlatForward>(
-        //         settlementDate, ext::make_shared<Quote>(flatRate),
-        //         Actual365Fixed()));
+        //         settlementDate, Handle<Quote>(flatRate), Actual365Fixed()));
         
         // Define a swap
         Frequency fixedLegFrequency = Annual;
@@ -218,9 +281,10 @@ int main(int, char* []) {
                   << std::endl << std::endl;
 
         // Bond prices from HW
-        Real bondPrice = modelHW->discountBond(0.0, 5.0, 0.04875825);
-        std::cout << "\nBond price from HW model: " << bondPrice << std::endl;
-
+        Real bondPriceHW = modelHW->discount((maturity - todaysDate)/365.);
+        std::cout << "\nBond price from HW model: " << bondPriceHW << std::endl;
+        Real bondPrice = rhTermStructure->discount(maturity);
+        std::cout << "Bond price from rate curve: " << bondPrice << std::endl;
 
 
 

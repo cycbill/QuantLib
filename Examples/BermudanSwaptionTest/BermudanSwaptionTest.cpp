@@ -219,8 +219,11 @@ int main(int, char* []) {
                   << std::endl << std::endl;
 
         // Bond prices from HW
-        Real bondPrice = modelHW->discountBond(0.0, 5.0, 0.04875825);
-        std::cout << "\nBond price from HW model: " << bondPrice << std::endl;
+        Real bondPriceHW = modelHW->discount((maturity - settlementDate)/365.);
+        std::cout << "\nBond price from HW model: " << bondPriceHW << std::endl;
+        Real bondPrice = rhTermStructure->discount(maturity);
+        std::cout << "Bond price from rate curve: " << bondPrice << std::endl;
+
 
 
 
