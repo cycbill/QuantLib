@@ -36,6 +36,7 @@ Test case: real rate curve term structure
 
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 
 using namespace QuantLib;
 
@@ -285,7 +286,17 @@ int main(int, char* []) {
         std::cout << "\nBond price from HW model: " << bondPriceHW << std::endl;
         Real bondPrice = rhTermStructure->discount(maturity);
         std::cout << "Bond price from rate curve: " << bondPrice << std::endl;
-
+        
+        // Generate curve term structure
+        for(const auto& quotePair : shortOisQuotes)
+        {
+            Date curveMat = calendar.advance(todaysDate, quotePair.first, floatingLegConvention);
+            bondPriceHW = modelHW->discount((curveMat - todaysDate)/365.);
+            bondPrice = rhTermStructure->discount(curveMat);
+            std::cout << "Curve mat " << quotePair.first 
+            << ": Mkt bond price = " << bondPrice
+            << ", HW bond price = " << bondPriceHW << std::endl;
+        }
 
 
         return 0;
